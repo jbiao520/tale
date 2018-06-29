@@ -3,6 +3,7 @@ var tale = new $.tale();
 var attach_url = $('#attach_url').val();
 // 每60秒自动保存一次草稿
 var refreshIntervalId = setInterval("autoSave()", 60 * 1000);
+Dropzone.autoDiscover = false;
 
 $(document).ready(function () {
 
@@ -40,9 +41,9 @@ $(document).ready(function () {
         }
     });
 
-    var fmt_type = $('#fmt_type').val();
+    var fmtType = $('#fmtType').val();
     // 富文本编辑器
-    if (fmt_type != 'markdown') {
+    if (fmtType != 'markdown') {
         var this_ = $('#switch-btn');
         mditor.value = '';
         $('#md-container').hide();
@@ -53,7 +54,7 @@ $(document).ready(function () {
         var this_ = $('#switch-btn');
         $('#html-container').hide();
         $('#md-container').show();
-        $('#fmt_type').val('markdown');
+        $('#fmtType').val('markdown');
         this_.attr('type', 'markdown');
         this_.text('切换为富文本编辑器');
         htmlEditor.summernote("code", "");
@@ -63,20 +64,29 @@ $(document).ready(function () {
      * 切换编辑器
      * */
     $('#switch-btn').click(function () {
-        var type = $('#fmt_type').val();
+        var type = $('#fmtType').val();
         var this_ = $(this);
         if (type == 'markdown') {
             // 切换为富文本编辑器
+            if($('#md-container .markdown-body').html().length > 0){
+                $('#html-container .note-editable').empty().html($('#md-container .markdown-body').html());
+                $('#html-container .note-placeholder').hide();
+
+            }
             mditor.value = '';
             $('#md-container').hide();
             $('#html-container').show();
             this_.text('切换为Markdown编辑器');
-            $('#fmt_type').val('html');
+            $('#fmtType').val('html');
         } else {
             // 切换为markdown编辑器
+            if($('#html-container .note-editable').html().length > 0){
+                mditor.value = '';
+                mditor.value = toMarkdown($('#html-container .note-editable').html());
+            }
             $('#html-container').hide();
             $('#md-container').show();
-            $('#fmt_type').val('markdown');
+            $('#fmtType').val('markdown');
             this_.text('切换为富文本编辑器');
             htmlEditor.summernote("code", "");
         }
@@ -96,7 +106,7 @@ $(document).ready(function () {
         }
     });
 
-    $(".select2").select2({
+    $("#multiple-sel").select2({
         width: '100%'
     });
 
@@ -132,8 +142,6 @@ $(document).ready(function () {
         $('#dropzone-container').hide();
     }
 
-    Dropzone.autoDiscover = false;
-
     var thumbdropzone = $('.dropzone');
 
     // 缩略图上传
@@ -157,7 +165,7 @@ $(document).ready(function () {
                     thumbdropzone.css('background-image', 'url('+ url +')');
                     thumbdropzone.css('background-size', 'cover');
                     $('.dz-image').hide();
-                    $('#thumb_img').val(url);
+                    $('#thumbImg').val(url);
                 }
             });
             this.on('error', function (a, errorMessage, result) {
@@ -174,11 +182,10 @@ $(document).ready(function () {
  * 自动保存为草稿
  * */
 function  autoSave() {
-    var content = $('#fmt_type').val() == 'markdown' ? mditor.value : htmlEditor.summernote('code');
+    var content = $('#fmtType').val() == 'markdown' ? mditor.value : htmlEditor.summernote('code');
     var title = $('#articleForm input[name=title]').val();
     if (title != '' && content != '') {
         $('#content-editor').val(content);
-        $("#articleForm #status").val('draft');
         $("#articleForm #categories").val($('#multiple-sel').val());
         var params = $("#articleForm").serialize();
         var url = $('#articleForm #cid').val() != '' ? '/admin/article/modify' : '/admin/article/publish';
@@ -201,7 +208,7 @@ function  autoSave() {
  * @param status
  */
 function subArticle(status) {
-    var content = $('#fmt_type').val() == 'markdown' ? mditor.value : htmlEditor.summernote('code');
+    var content = $('#fmtType').val() == 'markdown' ? mditor.value : htmlEditor.summernote('code');
     var title = $('#articleForm input[name=title]').val();
     if (title == '') {
         tale.alertWarn('请输入文章标题');
@@ -242,10 +249,10 @@ function allow_comment(obj) {
     var on = this_.attr('on');
     if (on == 'true') {
         this_.attr('on', 'false');
-        $('#allow_comment').val('false');
+        $('#allowComment').val('false');
     } else {
         this_.attr('on', 'true');
-        $('#allow_comment').val('true');
+        $('#allowComment').val('true');
     }
 }
 
@@ -254,10 +261,10 @@ function allow_ping(obj) {
     var on = this_.attr('on');
     if (on == 'true') {
         this_.attr('on', 'false');
-        $('#allow_ping').val('false');
+        $('#allowPing').val('false');
     } else {
         this_.attr('on', 'true');
-        $('#allow_ping').val('true');
+        $('#allowPing').val('true');
     }
 }
 
@@ -267,10 +274,10 @@ function allow_feed(obj) {
     var on = this_.attr('on');
     if (on == 'true') {
         this_.attr('on', 'false');
-        $('#allow_feed').val('false');
+        $('#allowFeed').val('false');
     } else {
         this_.attr('on', 'true');
-        $('#allow_feed').val('true');
+        $('#allowFeed').val('true');
     }
 }
 
@@ -281,7 +288,7 @@ function add_thumbimg(obj) {
     if (on == 'true') {
         this_.attr('on', 'false');
         $('#dropzone-container').addClass('hide');
-        $('#thumb_img').val('');
+        $('#thumbImg').val('');
     } else {
         this_.attr('on', 'true');
         $('#dropzone-container').removeClass('hide');
